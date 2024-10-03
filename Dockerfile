@@ -19,13 +19,13 @@ RUN chmod +x /docker-entrypoint.sh
 # Set default value for LB_GATEWAY_API_HOST
 ENV LB_GATEWAY_API_HOST=http://localhost:8080
 
-# Download the corresponding tarball
-RUN LATEST_TAG=$(git describe --tags --abbrev=0 | sed 's/^v//') && \
-    echo "Latest Tag: $LATEST_TAG" && \
-    curl -L -o linstor-gui-$LATEST_TAG.tar.gz  https://pkg.linbit.com//downloads/linstor/linstor-gui-$LATEST_TAG.tar.gz && \
-    mkdir -p /usr/share/nginx/html && \
-    tar -xzf linstor-gui-$LATEST_TAG.tar.gz -C /usr/share/nginx/html --strip-components=2 && \
-    rm linstor-gui-$LATEST_TAG.tar.gz
+# Copy the tarball
+ARG LB_LINSTOR_GUI_VERSION
+COPY linstor-gui-${LB_LINSTOR_GUI_VERSION}.tar.gz /linstor-gui.tar.gz
+
+RUN mkdir -p /usr/share/nginx/html && \
+    tar -xzf /linstor-gui.tar.gz -C /usr/share/nginx/html --strip-components=2 && \
+    rm /linstor-gui.tar.gz
 
 # Expose port 8000
 EXPOSE 8000

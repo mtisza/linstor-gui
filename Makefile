@@ -58,3 +58,16 @@ debrelease-docker: checkVERSION ## build a release in a node container
 	docker run -it --rm -v $(PWD):/src:ro,z -v $$tmpdir:/out:z node:$(NODEVERSION) /bin/bash -c \
 		'install /dev/null /usr/local/bin/lbvers.py && cd $$HOME && cp -r /src . && cd ./src && make debrelease VERSION=$(VERSION) && cp $(PROG)-$(VERSION).tar.gz /out' && \
 	mv $$tmpdir/*.tar.gz . && echo "rm -rf $$tmpdir"
+
+.PHONY: build-container
+build-container: release-docker
+	if [ -z "$$CONTAINER_REPO" ]; then echo "CONTAINER_REPO is not set"; exit 1; fi
+	if [ -z "$$CONTAINER_IMAGE" ]; then echo "CONTAINER_IMAGE is not set"; exit 1; fi
+
+	docker buildx create --use;
+	docker buildx build \
+		--build-arg LB_LINSTOR_GUI_VERSION=$(VERSION) \
+		--platform linux/amd64,linux/arm64 \
+		--tag ${CONTAINER_REPO}/${CONTAINER_IMAGE}:${VERSION} \
+		--push \
+		. \
