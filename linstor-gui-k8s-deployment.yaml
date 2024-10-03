@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: linstor-gui
+  namespace: piraeus-datastore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: linstor-gui
+  template:
+    metadata:
+      labels:
+        app: linstor-gui
+    spec:
+      containers:
+      - name: linstor-gui
+        image: mtisza/linstor-gui:1.8.2
+        env:
+        - name: LB_LINSTOR_API_HOST
+          value: "http://linstor-controller:3370"
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: linstor-gui
+  namespace: piraeus-datastore
+spec:
+  selector:
+    app: linstor-gui
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: LoadBalancer
